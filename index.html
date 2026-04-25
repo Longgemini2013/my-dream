@@ -3,8 +3,9 @@
 <head>
     <title>Game Caro Siêu Tốc</title>
     <style>
-        body { text-align: center; font-family: sans-serif; background: #2c3e50; color: white; padding-top: 50px; }
-        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 20px; }
+        body { text-align: center; font-family: sans-serif; background: #2c3e50; color: white; padding-top: 30px; }
+        .score-board { font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 10px; }
         .cell { width: 100px; height: 100px; background: #34495e; font-size: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
         .cell:hover { background: #3d566e; }
         button { margin-top: 20px; padding: 10px 20px; font-size: 18px; cursor: pointer; background: #27ae60; border: none; color: white; border-radius: 5px; }
@@ -14,6 +15,11 @@
 </head>
 <body>
     <h1>Game Caro</h1>
+    
+    <div class="score-board">
+        X: <span id="scoreX">0</span> | O: <span id="scoreO">0</span>
+    </div>
+
     <div class="board" id="board">
         <div class="cell" onclick="clickCell(0)"></div>
         <div class="cell" onclick="clickCell(1)"></div>
@@ -34,12 +40,16 @@
 
     <script>
         let turn = 'X';
+        let scoreX = 0;
+        let scoreO = 0;
         const cells = document.getElementsByClassName('cell');
 
         function clickCell(index) {
             if (!cells[index].innerText) {
                 cells[index].innerText = turn;
                 if (checkWinner()) {
+                    if (turn === 'X') scoreX++; else scoreO++;
+                    document.getElementById('score' + turn).innerText = turn === 'X' ? scoreX : scoreO;
                     setTimeout(() => alert("Người thắng cuộc là: " + turn), 10);
                 } else {
                     turn = turn === 'X' ? 'O' : 'X';
