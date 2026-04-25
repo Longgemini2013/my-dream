@@ -1,28 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Clicker của tôi</title>
+    <title>Game Caro Siêu Tốc</title>
     <style>
-        body { text-align: center; font-family: Arial; background-color: #1a1a1a; color: red; padding-top: 100px; }
-        #counter { font-size: 80px; margin-bottom: 20px; color: #f1c40f; }
-        button { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #e74c3c; border: none; color: white; border-radius: 10px; }
-        button:active { transform: scale(0.95); } /* Hiệu ứng nhấn nút */
-    </style>button:hover {
-    background: #c0392b; /* Đổi màu khi di chuột vào */
-    transform: scale(1.1); /* Phóng to nhẹ khi di chuột vào */
-    transition: 0.2s;
-}
+        body { text-align: center; font-family: sans-serif; background: #2c3e50; color: white; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 20px; }
+        .cell { width: 100px; height: 100px; background: #34495e; font-size: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cell:hover { background: #2c3e50; }
+    </style>
 </head>
 <body>
-
-    <div id="counter">0</div>
-    <button onclick="tangSo()">Bấm để tăng điểm!</button>
-
+    <h1>Game Caro</h1>
+    <div class="board" id="board">
+        <div class="cell" onclick="clickCell(0)"></div>
+        <div class="cell" onclick="clickCell(1)"></div>
+        <div class="cell" onclick="clickCell(2)"></div>
+        <div class="cell" onclick="clickCell(3)"></div>
+        <div class="cell" onclick="clickCell(4)"></div>
+        <div class="cell" onclick="clickCell(5)"></div>
+        <div class="cell" onclick="clickCell(6)"></div>
+        <div class="cell" onclick="clickCell(7)"></div>
+        <div class="cell" onclick="clickCell(8)"></div>
+    </div>
     <script>
-        let diem = 0;
-        function tangSo() {
-            diem = diem + 1;
-            document.getElementById("counter").innerText = diem;
+        let turn = 'X';
+        function clickCell(index) {
+            let cell = document.getElementsByClassName('cell')[index];
+            if (!cell.innerText) {
+                cell.innerText = turn;
+                turn = turn === 'X' ? 'O' : 'X';
+            }
         }
     </script>
 </body>
