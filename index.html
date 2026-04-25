@@ -1,23 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Caro Siêu Tốc</title>
+    <title>Game Caro Siêu Tốc Pro</title>
     <style>
-        body { text-align: center; font-family: sans-serif; background: #2c3e50; color: white; padding-top: 30px; }
-        .score-board { font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        body { 
+            text-align: center; 
+            font-family: sans-serif; 
+            /* Hình nền chuyển màu ảo diệu */
+            background: linear-gradient(135deg, #2c3e50, #4ca1af, #c4e0e5); 
+            background-size: 300% 300%;
+            animation: gradientBG 15s ease infinite;
+            color: white; 
+            padding-top: 30px; 
+            min-height: 100vh;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .score-board { font-size: 24px; margin-bottom: 20px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: inline-block; }
         .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 10px; }
-        .cell { width: 100px; height: 100px; background: #34495e; font-size: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
-        .cell:hover { background: #3d566e; }
-        button { margin-top: 20px; padding: 10px 20px; font-size: 18px; cursor: pointer; background: #27ae60; border: none; color: white; border-radius: 5px; }
-        button:hover { background: #2ecc71; }
-        footer { margin-top: 40px; color: #bdc3c7; font-size: 14px; }
+        
+        .cell { 
+            width: 100px; 
+            height: 100px; 
+            background: rgba(255, 255, 255, 0.1); /* Nền ô trong suốt nhẹ */
+            font-size: 60px; 
+            font-weight: bold;
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 8px; 
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        }
+        
+        .cell:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        /* Định nghĩa màu sắc cho X và O */
+        .x-player { color: #e74c3c; /* Đỏ */ }
+        .o-player { color: #3498db; /* Xanh */ }
+
+        button { margin-top: 20px; padding: 10px 20px; font-size: 18px; cursor: pointer; background: #27ae60; border: none; color: white; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        button:hover { background: #2ecc71; transform: translateY(-2px); }
+        button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        footer { margin-top: 40px; color: rgba(255,255,255,0.6); font-size: 14px; padding-bottom: 20px; }
     </style>
 </head>
 <body>
     <h1>Game Caro</h1>
     
     <div class="score-board">
-        X: <span id="scoreX">0</span> | O: <span id="scoreO">0</span>
+        X: <span id="scoreX" class="x-player">0</span> | O: <span id="scoreO" class="o-player">0</span>
     </div>
 
     <div class="board" id="board">
@@ -46,7 +85,10 @@
 
         function clickCell(index) {
             if (!cells[index].innerText) {
+                // Thêm class màu sắc tùy theo lượt đi
                 cells[index].innerText = turn;
+                cells[index].classList.add(turn === 'X' ? 'x-player' : 'o-player');
+
                 if (checkWinner()) {
                     if (turn === 'X') scoreX++; else scoreO++;
                     document.getElementById('score' + turn).innerText = turn === 'X' ? scoreX : scoreO;
@@ -67,7 +109,11 @@
         }
 
         function resetGame() {
-            for (let cell of cells) cell.innerText = '';
+            for (let cell of cells) {
+                cell.innerText = '';
+                // Xóa bỏ các class màu sắc cũ
+                cell.classList.remove('x-player', 'o-player');
+            }
             turn = 'X';
         }
     </script>
