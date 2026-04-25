@@ -1,103 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Caro "Stockfish 18"</title>
-    <style>
-        body { text-align: center; font-family: sans-serif; background: linear-gradient(135deg, #2c3e50, #4ca1af, #c4e0e5); background-size: 300% 300%; animation: gradientBG 15s ease infinite; color: white; padding-top: 30px; min-height: 100vh; }
-        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .score-board { font-size: 24px; margin-bottom: 20px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: inline-block; }
-        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 10px; }
-        .cell { width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1); font-size: 60px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
-        .cell:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-        .x-player { color: #e74c3c; }
-        .o-player { color: #3498db; }
-        button { margin-top: 20px; padding: 10px 20px; font-size: 18px; cursor: pointer; background: #27ae60; border: none; color: white; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        button:hover { background: #2ecc71; transform: translateY(-2px); }
-        footer { margin-top: 40px; color: rgba(255,255,255,0.6); font-size: 14px; }
-    </style>
+    <title>Chess Master - Long 7A1</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 </head>
-<body>
-    <h1>Game Caro vs AI (Stockfish)</h1>
-    <div class="score-board">
-        Bạn (X): <span id="scoreX" class="x-player">0</span> | AI (O): <span id="scoreO" class="o-player">0</span>
-    </div>
-    <div class="board" id="board">
-        <div class="cell" id="0"></div><div class="cell" id="1"></div><div class="cell" id="2"></div>
-        <div class="cell" id="3"></div><div class="cell" id="4"></div><div class="cell" id="5"></div>
-        <div class="cell" id="6"></div><div class="cell" id="7"></div><div class="cell" id="8"></div>
-    </div>
-    <button onclick="resetGame()">Chơi lại</button>
-    <footer>Made by Huynh Hoang Long 7a1</footer>
+<body style="text-align: center; background: #2c3e50; color: white;">
+    <h1>Chess vs Stockfish (Đang load engine...)</h1>
+    <div id="myBoard" style="width: 400px; margin: 20px auto;"></div>
+    <div id="status"></div>
 
     <script>
-        let scoreX = 0; let scoreO = 0;
-        const cells = document.querySelectorAll('.cell');
-        let boardState = ["", "", "", "", "", "", "", "", ""];
+        var board = null;
+        var game = new Chess();
 
-        cells.forEach(cell => cell.addEventListener('click', () => {
-            if (cell.innerText === '' && !checkWinner('O')) {
-                cell.innerText = 'X'; cell.classList.add('x-player');
-                boardState[cell.id] = 'X';
-                if (!checkWinner('X') && !checkDraw()) aiMove();
-            }
-        }));
-
-        function aiMove() {
-            let bestScore = -Infinity;
-            let move;
-            for (let i = 0; i < 9; i++) {
-                if (boardState[i] === "") {
-                    boardState[i] = "O";
-                    let score = minimax(boardState, 0, false);
-                    boardState[i] = "";
-                    if (score > bestScore) { bestScore = score; move = i; }
-                }
-            }
-            boardState[move] = "O";
-            cells[move].innerText = "O";
-            cells[move].classList.add("o-player");
-            if (checkWinner("O")) { scoreO++; document.getElementById('scoreO').innerText = scoreO; setTimeout(() => alert("AI thắng!"), 10); }
+        // Khởi tạo bàn cờ
+        function onDragStart (source, piece) {
+            if (game.game_over()) return false;
+            if (piece.search(/^b/) !== -1) return false; // Chỉ cho cầm quân Trắng (w)
         }
 
-        function minimax(board, depth, isMaximizing) {
-            if (checkWinner("O")) return 10 - depth;
-            if (checkWinner("X")) return depth - 10;
-            if (checkDraw()) return 0;
-
-            if (isMaximizing) {
-                let bestScore = -Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (board[i] === "") {
-                        board[i] = "O";
-                        bestScore = Math.max(bestScore, minimax(board, depth + 1, false));
-                        board[i] = "";
-                    }
-                }
-                return bestScore;
-            } else {
-                let bestScore = Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (board[i] === "") {
-                        board[i] = "X";
-                        bestScore = Math.min(bestScore, minimax(board, depth + 1, true));
-                        board[i] = "";
-                    }
-                }
-                return bestScore;
-            }
+        function onDrop (source, target) {
+            var move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+            
+            // AI đi sau 250ms
+            window.setTimeout(makeRandomMove, 250);
         }
 
-        function checkWinner(p) {
-            const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return lines.some(l => l.every(i => boardState[i] === p));
+        function makeRandomMove () {
+            var possibleMoves = game.moves();
+            if (possibleMoves.length === 0) return;
+            var randomIdx = Math.floor(Math.random() * possibleMoves.length);
+            game.move(possibleMoves[randomIdx]);
+            board.position(game.fen());
         }
 
-        function checkDraw() { return !boardState.includes(""); }
-
-        function resetGame() {
-            boardState = ["", "", "", "", "", "", "", "", ""];
-            cells.forEach(c => { c.innerText = ''; c.classList.remove('x-player', 'o-player'); });
-        }
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: function () { board.position(game.fen()) }
+        };
+        board = Chessboard('myBoard', config);
     </script>
 </body>
 </html>
