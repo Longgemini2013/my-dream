@@ -1,54 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mini CodeCombat - Long</title>
     <style>
-        #grid { display: grid; grid-template-columns: repeat(5, 50px); gap: 5px; margin-bottom: 20px; }
-        .cell { width: 50px; height: 50px; background: #eee; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; }
-        .hero { background: #e74c3c; color: white; border-radius: 50%; }
-        .target { background: #27ae60; }
-        textarea { width: 300px; height: 100px; display: block; margin-bottom: 10px; font-family: monospace; }
+        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        .track { width: 90%; height: 80px; border-bottom: 3px dashed white; position: relative; margin: 20px 0; }
+        #car-player, #car-ai { position: absolute; left: 0; bottom: 10px; font-size: 40px; transition: left 0.3s; }
+        #ai-speech { position: absolute; left: 10%; top: -30px; background: white; color: black; padding: 5px; border-radius: 10px; display: none; font-size: 14px; }
+        .controls { margin: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        input { font-size: 16px; padding: 5px; }
+        button { padding: 10px 20px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1>CodeCombat: Mê cung Lập Trình</h1>
-    <div id="grid"></div>
-    <textarea id="code" placeholder="Ví dụ: moveRight(); moveDown();"></textarea>
-    <button onclick="runCode()">Chạy Code</button>
+    <h1>Đua Xe: <span id="player-name">Bạn</span> vs AI</h1>
+    
+    <div class="controls">
+        <div>Tên của bạn: <input type="text" id="p1-input" value="Bạn"></div>
+        <div>
+            <button onclick="startGame('easy')">Easy</button>
+            <button onclick="startGame('medium')">Medium</button>
+            <button onclick="startGame('hard')">Hard</button>
+        </div>
+    </div>
+    
+    <div class="track"><div id="car-player">🏎️</div></div>
+    <div class="track">
+        <div id="ai-speech">He he!</div>
+        <div id="car-ai">🤖</div>
+    </div>
+
+    <input type="text" id="input-field" placeholder="Gõ để bắt đầu..." disabled style="width: 500px; font-size: 20px;">
 
     <script>
-        let heroPos = {x: 0, y: 0};
-        const targetPos = {x: 4, y: 4};
+        const inputField = document.getElementById('input-field');
+        const playerCar = document.getElementById('car-player');
+        const aiCar = document.getElementById('car-ai');
+        const aiSpeech = document.getElementById('ai-speech');
+        const targetText = "Lập trình là nghệ thuật biến ý tưởng thành sự thật.";
+        let aiInterval, aiPos, gameActive = false;
 
-        function render() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            for(let y=0; y<5; y++) {
-                for(let x=0; x<5; x++) {
-                    let cell = document.createElement('div');
-                    cell.className = 'cell';
-                    if(x === heroPos.x && y === heroPos.y) cell.classList.add('hero'), cell.innerText = '😎';
-                    if(x === targetPos.x && y === targetPos.y) cell.classList.add('target');
-                    grid.appendChild(cell);
-                }
+        const taunts = ["Gõ nhanh tí đi!", "Tao là AI, mày tuổi gì?", "Lại gõ sai rồi, gà thế!", "Đang lag hay tại mày chậm?", "Về đích trước đây!"];
+
+        function showTaunt() {
+            aiSpeech.innerText = taunts[Math.floor(Math.random() * taunts.length)];
+            aiSpeech.style.display = 'block';
+            setTimeout(() => { aiSpeech.style.display = 'none'; }, 2000);
+        }
+
+        function startGame(difficulty) {
+            document.getElementById('player-name').innerText = document.getElementById('p1-input').value;
+            
+            gameActive = true;
+            aiPos = 0;
+            playerCar.style.left = '0%';
+            aiCar.style.left = '0%';
+            inputField.value = '';
+            inputField.disabled = false;
+            inputField.focus();
+            clearInterval(aiInterval);
+
+            let speed = (difficulty === 'easy') ? 1.0 : (difficulty === 'medium') ? 2.0 : 3.5;
+            aiInterval = setInterval(() => {
+                if (!gameActive) return;
+                aiPos += Math.random() * speed;
+                aiCar.style.left = aiPos + '%';
+                
+                if (Math.random() > 0.9) showTaunt();
+
+                if (aiPos >= 90) endGame("AI đã về đích. Bạn thua rồi!");
+            }, 300);
+        }
+
+        inputField.addEventListener('input', () => {
+            if (!gameActive) return;
+            if (targetText.startsWith(inputField.value)) {
+                playerCar.style.left = (inputField.value.length / targetText.length) * 90 + '%';
+                if (inputField.value === targetText) endGame("Chúc mừng! Bạn đã thắng AI!");
             }
+        });
+
+        function endGame(msg) {
+            gameActive = false;
+            clearInterval(aiInterval);
+            inputField.disabled = true;
+            alert(msg);
         }
-
-        // Các hàm để bạn gọi trong textarea
-        function moveRight() { if(heroPos.x < 4) heroPos.x++; render(); }
-        function moveDown() { if(heroPos.y < 4) heroPos.y++; render(); }
-        function moveUp() { if(heroPos.y > 0) heroPos.y--; render(); }
-        function moveLeft() { if(heroPos.x > 0) heroPos.x--; render(); }
-
-        function runCode() {
-            let commands = document.getElementById('code').value;
-            try {
-                eval(commands); // Chạy những gì bạn gõ vào
-                if(heroPos.x === targetPos.x && heroPos.y === targetPos.y) alert("Chiến thắng!");
-            } catch(e) { alert("Code lỗi rồi: " + e.message); }
-        }
-
-        render();
     </script>
 </body>
 </html>
