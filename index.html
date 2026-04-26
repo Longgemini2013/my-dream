@@ -1,45 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
+    <meta charset="UTF-8">
+    <title>Ultimate Typing Race</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-        .track { width: 90%; height: 80px; border-bottom: 3px dashed white; position: relative; margin: 20px 0; }
-        #car-player, #car-ai { position: absolute; left: 0; bottom: 10px; font-size: 40px; transition: left 0.3s; }
-        #ai-speech { position: absolute; left: 10%; top: -30px; background: white; color: black; padding: 5px; border-radius: 10px; display: none; font-size: 14px; }
-        .controls { margin: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        input { font-size: 16px; padding: 5px; }
-        button { padding: 10px 20px; cursor: pointer; }
+        :root { --bg: #1a1a1a; --text: #ecf0f1; --accent: #f1c40f; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { margin-bottom: 20px; }
+        
+        .controls { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; }
+        
+        .track-container { width: 90%; max-width: 800px; background: #333; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        .track { width: 100%; height: 60px; border-bottom: 2px dashed #555; position: relative; }
+        #car-player, #car-ai { position: absolute; left: 0; bottom: 5px; font-size: 30px; transition: left 0.3s ease-out; }
+        #ai-speech { position: absolute; left: 10%; top: -35px; background: white; color: black; padding: 5px 10px; border-radius: 10px; display: none; font-size: 14px; font-weight: bold; }
+
+        #prompt-container { background: #2c3e50; padding: 20px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; width: 90%; max-width: 800px; text-align: center; }
+        #target-text { font-size: 24px; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+        .correct { color: #2ecc71; }
+        .incorrect { color: #e74c3c; text-decoration: underline; }
+
+        input { font-size: 20px; padding: 10px; width: 80%; max-width: 600px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; background: var(--accent); color: black; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Đua Xe: <span id="player-name">Bạn</span> vs AI</h1>
+
+    <h1>Đua Xe Gõ Phím: <span id="player-display">Bạn</span> vs AI</h1>
     
     <div class="controls">
-        <div>Tên của bạn: <input type="text" id="p1-input" value="Bạn"></div>
-        <div>
-            <button onclick="startGame('easy')">Easy</button>
-            <button onclick="startGame('medium')">Medium</button>
-            <button onclick="startGame('hard')">Hard</button>
-        </div>
+        Tên bạn: <input type="text" id="p1-input" value="Bạn" style="width: 100px;">
+        <button onclick="startGame('easy')">Easy</button>
+        <button onclick="startGame('medium')">Medium</button>
+        <button onclick="startGame('hard')">Hard</button>
     </div>
     
-    <div class="track"><div id="car-player">🏎️</div></div>
-    <div class="track">
-        <div id="ai-speech">He he!</div>
-        <div id="car-ai">🤖</div>
+    <div class="track-container">
+        <div class="track"><div id="car-player">🏎️</div></div>
+        <div class="track">
+            <div id="ai-speech">He he!</div>
+            <div id="car-ai">🤖</div>
+        </div>
     </div>
 
-    <input type="text" id="input-field" placeholder="Gõ để bắt đầu..." disabled style="width: 500px; font-size: 20px;">
+    <div id="prompt-container">
+        <div id="target-text">Chọn độ khó để bắt đầu đua...</div>
+    </div>
+
+    <input type="text" id="input-field" placeholder="Gõ câu phía trên vào đây..." disabled>
 
     <script>
         const inputField = document.getElementById('input-field');
         const playerCar = document.getElementById('car-player');
         const aiCar = document.getElementById('car-ai');
         const aiSpeech = document.getElementById('ai-speech');
-        const targetText = "Lập trình là nghệ thuật biến ý tưởng thành sự thật.";
-        let aiInterval, aiPos, gameActive = false;
+        const targetDisplay = document.getElementById('target-text');
+        
+        const sentences = [
+            "Lập trình là nghệ thuật biến ý tưởng thành sự thật.",
+            "Muốn thắng AI thì tay phải nhanh hơn não.",
+            "Hiếu ơi, gõ chậm thế, tập thêm đi cưng!",
+            "Code không chạy là lỗi tại máy, không phải tại tao.",
+            "Thao tác là sức mạnh, gõ phím là nghệ thuật.",
+            "Đừng nhìn sang màn hình của tao, tập trung đi!"
+        ];
 
-        const taunts = ["Gõ nhanh tí đi!", "Tao là AI, mày tuổi gì?", "Lại gõ sai rồi, gà thế!", "Đang lag hay tại mày chậm?", "Về đích trước đây!"];
+        let aiInterval, aiPos, gameActive = false, currentTarget = "";
+        const taunts = ["Gõ nhanh tí đi!", "Tao là AI, mày tuổi gì?", "Gà thế!", "Đang lag hay tại mày chậm?", "Về đích trước đây!"];
 
         function showTaunt() {
             aiSpeech.innerText = taunts[Math.floor(Math.random() * taunts.length)];
@@ -48,7 +75,11 @@
         }
 
         function startGame(difficulty) {
-            document.getElementById('player-name').innerText = document.getElementById('p1-input').value;
+            document.getElementById('player-display').innerText = document.getElementById('p1-input').value;
+            currentTarget = sentences[Math.floor(Math.random() * sentences.length)];
+            
+            // Render text with spans for coloring
+            targetDisplay.innerHTML = currentTarget.split('').map(char => `<span>${char}</span>`).join('');
             
             gameActive = true;
             aiPos = 0;
@@ -64,26 +95,40 @@
                 if (!gameActive) return;
                 aiPos += Math.random() * speed;
                 aiCar.style.left = aiPos + '%';
-                
                 if (Math.random() > 0.9) showTaunt();
-
                 if (aiPos >= 90) endGame("AI đã về đích. Bạn thua rồi!");
             }, 300);
         }
 
         inputField.addEventListener('input', () => {
             if (!gameActive) return;
-            if (targetText.startsWith(inputField.value)) {
-                playerCar.style.left = (inputField.value.length / targetText.length) * 90 + '%';
-                if (inputField.value === targetText) endGame("Chúc mừng! Bạn đã thắng AI!");
-            }
+            const inputVal = inputField.value;
+            const spans = targetDisplay.querySelectorAll('span');
+            
+            // Check progress & color coding
+            spans.forEach((span, index) => {
+                const char = inputVal[index];
+                if (char == null) {
+                    span.className = '';
+                } else if (char === span.innerText) {
+                    span.className = 'correct';
+                } else {
+                    span.className = 'incorrect';
+                }
+            });
+
+            // Update car
+            playerCar.style.left = (inputVal.length / currentTarget.length) * 90 + '%';
+
+            // Win condition
+            if (inputVal === currentTarget) endGame("Chúc mừng! Bạn đã thắng AI!");
         });
 
         function endGame(msg) {
             gameActive = false;
             clearInterval(aiInterval);
             inputField.disabled = true;
-            alert(msg);
+            setTimeout(() => alert(msg), 100);
         }
     </script>
 </body>
